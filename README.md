@@ -9,5 +9,3 @@ hello from manjit
 
 
 testing commit of hackathon
-
-From team member : Mohammad arslan
