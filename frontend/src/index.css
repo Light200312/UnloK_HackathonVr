@@ -1,0 +1,24 @@
+@import "tailwindcss";
+@plugin "daisyui" {
+  themes: light --default, dark --prefersdark, cupcake, bumblebee, emerald,
+    corporate, synthwave, retro, cyberpunk, valentine, halloween, garden, forest,
+    aqua, lofi, pastel, fantasy, wireframe, black, luxury, dracula, cmyk, autumn,
+    business, acid, lemonade, night, coffee, winter, dim, nord, sunset;
+}
+/* src/styles.css or src/App.css */
+/* src/index.css */
+/* @import url('https://fonts.googleapis.com/css2?family=Bitcount+Prop+Single:wght@100;200;300;400;500;600;700;800;900&display=swap');
+
+body {
+  font-family: 'Bitcount Prop Single', sans-serif;
+}
+
+.font-bitcount {
+  font-family: 'Bitcount Prop Single', sans-serif;
+} */
+html,
+body,
+#root {
+  height: 100%;
+  position: relative;
+}
