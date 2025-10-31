@@ -2,12 +2,49 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useChatStore } from "../store/Chatstore";
 import { UserAuth } from "../store/userAuthStore";
-import { usePostStore } from "../store/PostStore";
+import { usePostStore } from "../store/PostStore"; // 1. Import PostStore
 import PostCard from "../components/SubComponent/PostCard";
-import { MessageCircle, Send } from "lucide-react";
+import { MessageCircle, Send, X } from "lucide-react";
+
+// 5. A new modal component to show comments
+const CommentsModal = ({ postId, comments, onClose }) => {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+      <div className="bg-base-100 rounded-lg shadow-xl w-full max-w-lg max-h-[80vh] flex flex-col">
+        <div className="flex justify-between items-center p-4 border-b border-base-300">
+          <h3 className="text-lg font-semibold">Comments</h3>
+          <button onClick={onClose} className="btn btn-sm btn-ghost btn-circle">
+            <X size={20} />
+          </button>
+        </div>
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          {comments.length === 0 ? (
+            <p className="text-base-content/70 text-center">
+              No comments yet.
+            </p>
+          ) : (
+            comments.map((comment) => (
+              <div key={comment._id} className="flex items-start gap-3">
+                <img
+                  src={comment.userId?.profilePic || "/profile.png"}
+                  alt={comment.username}
+                  className="w-8 h-8 rounded-full bg-base-300"
+                />
+                <div className="flex-1 bg-base-200 p-3 rounded-md">
+                  <p className="font-semibold text-sm">{comment.username}</p>
+                  <p className="text-base-content/90">{comment.text}</p>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const GlobalChat = () => {
-  const { authUser } = UserAuth();
+  const { authUser } = UserAuth(); // 2. Get authed user
   const {
     globalMessages,
     isMessagesLoading,
@@ -18,12 +55,18 @@ const GlobalChat = () => {
     sendGlobalMessage,
   } = useChatStore();
 
+  // 3. Get all functions and data from PostStore
   const {
     fetchLatestPost,
     completedPosts,
     loading,
     currentPage,
     totalPages,
+    toggleLike,
+    addComment,
+    verifyPost,
+    fetchPostComments,
+    comments: postComments, // Rename to avoid conflict
   } = usePostStore();
 
   const [messageData, setMessageData] = useState({
@@ -32,9 +75,15 @@ const GlobalChat = () => {
     userId: authUser?._id,
   });
 
+  // 4. State for comment modal
+  const [selectedPostId, setSelectedPostId] = useState(null);
+  const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
+
   const messagesEndRef = useRef(null);
   const mainRef = useRef(null);
   const scrollTimeout = useRef(null);
+
+  // ... (existing useEffects for chat and scroll) ...
 
   // ⚡ Auto-scroll messages
   useEffect(() => {
@@ -72,6 +121,7 @@ const GlobalChat = () => {
     return () => mainEl && mainEl.removeEventListener("scroll", handleScroll);
   }, [loading, currentPage, totalPages]);
 
+  // ... (existing chat handlers) ...
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -88,12 +138,50 @@ const GlobalChat = () => {
     setMessageData({ text: "", image: "", userId: authUser._id });
   };
 
+  // 6. Define handler functions to pass to PostCard
+  const handleShowComments = (postId) => {
+    setSelectedPostId(postId);
+    fetchPostComments(postId); // Fetch comments when modal is opened
+    setIsCommentModalOpen(true);
+  };
+
+  const handleAddComment = (postId, text) => {
+    if (!authUser?._id) return;
+    addComment(postId, { userId: authUser._id, text });
+    // Optionally re-fetch comments after adding
+    setTimeout(() => fetchPostComments(postId), 500);
+  };
+
+  const handleLike = (postId) => {
+    if (!authUser?._id) return;
+    toggleLike(postId, authUser._id);
+  };
+
+  const handleVerify = (challengeToVerify, postId) => {
+    if (!authUser?._id) return;
+
+    const post = completedPosts.find((p) => p._id === postId);
+    if (!post) return;
+
+    // Find the index of the challenge, which is required by the backend
+    const challengeIndex = post.challenges.findIndex(
+      (c) => c.challengeId === challengeToVerify.challengeId
+    );
+
+    if (challengeIndex === -1) {
+      console.error("Could not find challenge index in post");
+      return;
+    }
+
+    verifyPost(postId, authUser._id, challengeIndex);
+  };
+
   return (
     <div
       data-theme="forest"
       className="min-h-screen w-full flex bg-[#020617] text-white overflow-hidden relative"
     >
-      {/* 🔮 Background glow */}
+      {/* ... (existing background divs) ... */}
       <div className="absolute inset-0 bg-gradient-to-b from-blue-900/20 via-black to-black" />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,255,255,0.05),transparent_70%)] animate-pulse" />
 
@@ -104,7 +192,8 @@ const GlobalChat = () => {
       >
         <div className="max-w-2xl mx-auto">
           <h1 className="text-3xl font-bold text-center mb-8 text-cyan-400 drop-shadow-[0_0_10px_rgba(0,255,255,0.6)]">
-          
+            {/* Title was empty, adding one */}
+            Community Feed
           </h1>
 
           {loading && currentPage === 1 ? (
@@ -114,7 +203,18 @@ const GlobalChat = () => {
           ) : (
             completedPosts
               .filter((p) => p.live)
-              .map((post) => <PostCard key={post._id} post={post} />)
+              .map((post) => (
+                // 7. Pass all props to the PostCard
+                <PostCard
+                  key={post._id}
+                  post={post}
+                  currentUserId={authUser?._id}
+                  onLike={handleLike}
+                  onShowComments={handleShowComments}
+                  onAddComment={handleAddComment}
+                  onVerify={handleVerify}
+                />
+              ))
           )}
 
           {loading && currentPage > 1 && (
@@ -127,6 +227,7 @@ const GlobalChat = () => {
 
       {/* 💬 Right Side – Global Chat */}
       <aside className="hidden xl:flex flex-col w-[370px] border-l border-cyan-700/40 bg-black/30 backdrop-blur-lg relative z-10 shadow-[0_0_25px_rgba(0,255,255,0.15)]">
+        {/* ... (existing chat UI) ... */}
         {/* Header */}
         <div className="p-4 border-b border-cyan-600/40 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-cyan-300">Global Chat</h2>
@@ -237,6 +338,15 @@ const GlobalChat = () => {
           </div>
         )}
       </aside>
+
+      {/* 8. Render the modal */}
+      {isCommentModalOpen && (
+        <CommentsModal
+          postId={selectedPostId}
+          comments={postComments[selectedPostId] || []}
+          onClose={() => setIsCommentModalOpen(false)}
+        />
+      )}
     </div>
   );
 };

@@ -9,7 +9,7 @@ const Login = lazy(() => import("./pages/Login"));
 const Register = lazy(() => import("./pages/Register"));
 const WeeklyChallenges = lazy(() => import("./pages/WeeklyChallenges"));
 const MonthlyChallenge = lazy(() => import("./pages/MonthlyChallenge"));
-
+import ClanSearch from "./pages/ClanSearch"
 const DailyChellenges = lazy(() => import("./pages/dailyChellenges"));
 const StatsAndRanking = lazy(() => import("./pages/StatsAndRanking"));
 import PostEditor from "./pages/PostsEditor";
@@ -107,6 +107,13 @@ const App = () => {
                   authUser?.username ? <ClanHub /> : <Navigate to="/login" />
                 }
               />
+              
+                <Route
+                path="/create-clan"
+                element={
+                  authUser?.username ? <CreateClan /> : <Navigate to="/login" />
+                }
+              />
                 <Route
                 path="/create-clan"
                 element={
@@ -114,10 +121,10 @@ const App = () => {
                 }
               />
               <Route
-                path="/weeklychallenge"
+                path="/clanSearch"
                 element={
                   authUser?.username ? (
-                    <WeeklyChallenges />
+                    <ClanSearch />
                   ) : (
                     <Navigate to="/login" />
                   )

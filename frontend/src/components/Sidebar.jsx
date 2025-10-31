@@ -84,7 +84,7 @@ const NavItem = ({ icon, label, PageLink, badge, onClick }) => (
           {/* --- Navigation --- */}
           <nav className="flex flex-col space-y-2">
             <NavItem PageLink="/globalChat" icon={<Home />} label="Home" />
-            <NavItem PageLink="/" icon={<Telescope />} label="Search" />
+            <NavItem PageLink="/clanSearch" icon={<Telescope />} label="Search" />
             <NavItem PageLink="/explore" icon={<Compass />} label="Explore" />
 
             {/* Quests Popup */}

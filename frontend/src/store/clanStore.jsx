@@ -15,7 +15,18 @@ export const useClanStore = create(
       clanRequests: [],
       clansLoading: false,
       messagesLoading: false,
-
+fetchClanByClanId: async (clanId) => { // Renamed from getClanInfo
+        set({ clansLoading: true });
+        try {
+          const res = await axios.get(`${url}/clan/info/${clanId}`);
+          set({ clan: res.data }); // <--- FIX: SETS THE MAIN 'CLAN' OBJECT
+        } catch (err) {
+          toast.error(err.response?.data?.error || "Failed to fetch clan info");
+          set({ clan: null }); // Clear state on error
+        } finally {
+          set({ clansLoading: false });
+        }
+      },
       /** ✅ Create Clan */
       createClan: async (clanData) => {
         set({ clansLoading: true });
