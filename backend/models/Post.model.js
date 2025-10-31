@@ -4,6 +4,8 @@ const challengeProofSchema = new mongoose.Schema({
   challengeId: { type: mongoose.Schema.Types.ObjectId, ref: "ChallengeBatch.challenges" },
   title: String,
   description: String,
+  metricCategory: { type: String, required: true },//new 
+  subMetric: { type: String, required: true },//new
   proofText: String, // user summary of how they completed the challenge
   proofImage: String, // Cloudinary URL
   verifiedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],

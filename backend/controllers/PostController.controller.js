@@ -69,7 +69,9 @@ export const submitChallengeSolution = async (req, res) => {
       post.challenges.push({
         challengeId: challenge._id,
         title: challenge.title,
+        metricCategory:challenge.metricCategory,
         description: challenge.description,
+        subMetric:challenge.subMetric,
         proofText: textSummary,
         proofImage: imageUrl,
       });
